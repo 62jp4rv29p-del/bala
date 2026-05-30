@@ -1,7 +1,14 @@
 <template>
   <div class="app-root">
-    <!-- Settings button -->
-    <button class="settings-btn" @click="showSettings = true">⚙️</button>
+    <!-- Intro / Start Screen -->
+    <Transition name="intro-fade">
+      <div v-if="gameState.phase === 'intro'" class="intro-overlay">
+        <StartView @start="startGame" />
+      </div>
+    </Transition>
+
+    <!-- Settings button (hidden on intro) -->
+    <button v-if="gameState.phase !== 'intro'" class="settings-btn" @click="showSettings = true">⚙️</button>
 
     <!-- Settings Modal -->
     <SettingsModal
@@ -14,7 +21,7 @@
     <!-- Playing card flyout layer -->
     <div class="fly-layer" ref="flyLayer"></div>
 
-    <div class="layout">
+    <div v-if="gameState.phase !== 'intro'" class="layout">
       <!-- Left sidebar -->
       <SideBar
         :current-blind="currentBlind"
@@ -27,7 +34,8 @@
         :current-hand-type="gameState.currentHandType"
         :current-chips="gameState.currentChips"
         :current-mult="gameState.currentMult"
-        @restart="startGame"
+        :time-left="turnTimeLeft"
+        @restart="goToIntro"
         ref="sidebarRef"
       />
 
@@ -135,6 +143,7 @@ import PlayArea from './components/PlayArea.vue'
 import HandArea from './components/HandArea.vue'
 import ShopView from './components/ShopView.vue'
 import EndView from './components/EndView.vue'
+import StartView from './components/StartView.vue'
 import SettingsModal from './components/SettingsModal.vue'
 
 import { createDeck, shuffleDeck, identifyHand, calculateScore, findBestPlay, findBestJokerBuy } from './composables/useCardEngine.js'
@@ -171,7 +180,7 @@ const JOKER_CATALOG = [
 
 export default {
   name: 'App',
-  components: { SideBar, JokerCard, PlayArea, HandArea, ShopView, EndView, SettingsModal },
+  components: { SideBar, JokerCard, PlayArea, HandArea, ShopView, EndView, StartView, SettingsModal },
 
   data() {
     return {
@@ -182,7 +191,7 @@ export default {
       settings: loadSettings(),
 
       gameState: {
-        phase: 'playing',
+        phase: 'intro',
         currentBlindIndex: 0,
         roundNumber: 1,
         roundScore: 0,
@@ -217,6 +226,9 @@ export default {
 
       shopHandsRemaining: 0,
       shopRewardAmount: 5,
+
+      turnTimeLeft: 60,
+      _turnTimerInterval: null,
     }
   },
 
@@ -228,7 +240,11 @@ export default {
   },
 
   mounted() {
-    this.startGame()
+    // Start on intro screen; actual game starts when user clicks 开始游戏
+  },
+
+  beforeUnmount() {
+    this.stopTurnTimer()
   },
 
   methods: {
@@ -267,6 +283,7 @@ export default {
       this.aiSuggestedJokerId = null
 
       this.initDeckAndDeal()
+      this.startTurnTimer()
     },
 
     initDeckAndDeal() {
@@ -294,6 +311,7 @@ export default {
       this.gameState.deck = shuffled
       this.gameState.hand = []
       this.dealCardsWithAnim(HAND_SIZE)
+      this.startTurnTimer()
     },
 
     dealCard() {
@@ -308,6 +326,7 @@ export default {
 
     async dealCardsWithAnim(count) {
       const stagger = this.getAnimMs(60)
+      const flyMs = this.getAnimMs(400)
       const newCards = []
       for (let i = 0; i < count; i++) {
         newCards.push(this.dealCard())
@@ -315,16 +334,81 @@ export default {
       for (let i = 0; i < newCards.length; i++) {
         await this.sleep(stagger)
         this.gameState.hand.push(newCards[i])
+        await this.$nextTick()
+        this.flyCardFromDeck(newCards[i].id, flyMs)
       }
+      await this.sleep(flyMs)
     },
 
     async dealReplacementCards(count) {
       const stagger = this.getAnimMs(60)
+      const flyMs = this.getAnimMs(400)
       for (let i = 0; i < count; i++) {
         await this.sleep(stagger)
         const c = this.dealCard()
         this.gameState.hand.push(c)
+        await this.$nextTick()
+        this.flyCardFromDeck(c.id, flyMs)
       }
+      await this.sleep(flyMs)
+    },
+
+    flyCardFromDeck(cardId, flyMs) {
+      const playAreaRef = this.$refs.playAreaRef
+      const handAreaRef = this.$refs.handAreaRef
+      if (!playAreaRef || !handAreaRef) return
+
+      const deckRect = playAreaRef.getDeckRect()
+      if (!deckRect) return
+
+      const slotEl = handAreaRef.getCardSlotEl(cardId)
+      if (!slotEl) return
+
+      const toRect = slotEl.getBoundingClientRect()
+
+      // 起点：牌堆中心
+      const fromX = deckRect.left + deckRect.width / 2
+      const fromY = deckRect.top + deckRect.height / 2
+
+      // 目标：手牌槽中心
+      const toX = toRect.left + toRect.width / 2
+      const toY = toRect.top + toRect.height / 2
+
+      // 克隆牌背
+      const clone = document.createElement('div')
+      clone.style.cssText = [
+        'position: fixed',
+        'left: ' + (fromX - toRect.width / 2) + 'px',
+        'top: ' + (fromY - toRect.height / 2) + 'px',
+        'width: ' + toRect.width + 'px',
+        'height: ' + toRect.height + 'px',
+        'background: url(/card-back.png) center/cover no-repeat',
+        'border-radius: 8px',
+        'border: 2px solid #1a0f24',
+        'box-shadow: 0 4px 12px rgba(0,0,0,0.6)',
+        'z-index: 600',
+        'pointer-events: none',
+        'transition: none',
+      ].join(';')
+
+      document.body.appendChild(clone)
+      slotEl.style.visibility = 'hidden'
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          clone.style.transition = [
+            'left ' + flyMs + 'ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            'top ' + flyMs + 'ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            'opacity ' + Math.round(flyMs * 0.8) + 'ms ease'
+          ].join(',')
+          clone.style.left = (toX - toRect.width / 2) + 'px'
+          clone.style.top = (toY - toRect.height / 2) + 'px'
+          setTimeout(() => {
+            if (clone.parentNode) clone.parentNode.removeChild(clone)
+            slotEl.style.visibility = ''
+          }, flyMs)
+        })
+      })
     },
 
     toggleCardSelect(card) {
@@ -528,6 +612,9 @@ export default {
       this.gameState.animating = false
       await this.sleep(100)
       this.checkRoundEnd()
+      if (this.gameState.phase === 'playing') {
+        this.resetTurnTimer()
+      }
     },
 
     async animateCardsToPlayArea(cards) {
@@ -599,6 +686,7 @@ export default {
       this.gameState.currentHandType = null
 
       await this.dealReplacementCards(discardIds.length)
+      this.resetTurnTimer()
     },
 
     checkRoundEnd() {
@@ -606,6 +694,7 @@ export default {
       const blind = BLINDS[gs.currentBlindIndex]
 
       if (gs.roundScore >= blind.target) {
+        this.stopTurnTimer()
         const handsBonus = gs.handsLeft
         const reward = 5 + handsBonus
         gs.coins += reward
@@ -619,6 +708,7 @@ export default {
           this.generateShop()
         }
       } else if (gs.handsLeft <= 0) {
+        this.stopTurnTimer()
         gs.phase = 'lost'
       }
     },
@@ -653,12 +743,44 @@ export default {
       this.gameState.phase = 'playing'
       this.aiSuggestedJokerId = null
       this.startNewRound()
+      // startNewRound calls startTurnTimer internally
+    },
+
+    startTurnTimer() {
+      this.stopTurnTimer()
+      this.turnTimeLeft = 60
+      this._turnTimerInterval = setInterval(() => {
+        if (this.gameState.animating || this.aiThinking) return
+        if (this.gameState.phase !== 'playing') {
+          this.stopTurnTimer()
+          return
+        }
+        this.turnTimeLeft--
+        if (this.turnTimeLeft <= 0) {
+          this.stopTurnTimer()
+          this.handleAiPlay()
+        }
+      }, 1000)
+    },
+
+    stopTurnTimer() {
+      if (this._turnTimerInterval) {
+        clearInterval(this._turnTimerInterval)
+        this._turnTimerInterval = null
+      }
+    },
+
+    resetTurnTimer() {
+      if (this.gameState.phase === 'playing') {
+        this.startTurnTimer()
+      }
     },
 
     async handleAiPlay() {
       if (this.gameState.animating || this.aiThinking) return
       if (this.gameState.hand.length === 0) return
 
+      this.stopTurnTimer()
       this.aiThinking = true
       await this.sleep(this.getAnimMs(800))
 
@@ -669,6 +791,11 @@ export default {
 
       await this.sleep(this.getAnimMs(200))
       await this.handlePlay()
+    },
+
+    goToIntro() {
+      this.stopTurnTimer()
+      this.gameState.phase = 'intro'
     },
 
     doAiSuggest() {
@@ -752,6 +879,27 @@ body::before {
 .settings-btn:hover {
   background: linear-gradient(135deg, #fb923c, #f97316);
   transform: scale(1.1) rotate(15deg);
+}
+
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.intro-fade-enter-active,
+.intro-fade-leave-active {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.intro-fade-enter-from {
+  opacity: 0;
+  transform: scale(1.04);
+}
+
+.intro-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 .fly-layer {

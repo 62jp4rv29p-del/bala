@@ -78,6 +78,15 @@
       <span class="coins-value">{{ coins }}</span>
     </div>
 
+    <!-- Turn Timer -->
+    <div class="timer-panel" :class="{ 'timer-warning': timeLeft <= 10, 'timer-critical': timeLeft <= 5 }">
+      <div class="timer-label">剩余时间</div>
+      <div class="timer-value">{{ timeLeft }}s</div>
+      <div class="timer-bar">
+        <div class="timer-bar-fill" :style="{ width: (timeLeft / 60 * 100) + '%' }"></div>
+      </div>
+    </div>
+
     <!-- Ante / Round info -->
     <div class="ante-info">
       Ante 1/3 · 第 {{ roundNumber }} 轮
@@ -103,7 +112,8 @@ export default {
     roundNumber: { type: Number, required: true },
     currentHandType: { type: Object, default: null },
     currentChips: { type: Number, default: 0 },
-    currentMult: { type: Number, default: 0 }
+    currentMult: { type: Number, default: 0 },
+    timeLeft: { type: Number, default: 60 }
   },
   emits: ['restart'],
   data() {
@@ -403,6 +413,75 @@ export default {
   font-size: 44px;
   color: #fbbf24;
   line-height: 1;
+}
+
+.timer-panel {
+  background: rgba(20, 30, 60, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.timer-panel.timer-warning {
+  border-color: rgba(251, 191, 36, 0.6);
+  background: rgba(40, 30, 10, 0.9);
+}
+
+.timer-panel.timer-critical {
+  border-color: rgba(239, 68, 68, 0.8);
+  background: rgba(50, 10, 10, 0.9);
+  animation: timerPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes timerPulse {
+  from { box-shadow: none; }
+  to { box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
+}
+
+.timer-label {
+  font-family: 'Inter', 'PingFang SC', sans-serif;
+  font-size: 10px;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.timer-value {
+  font-family: 'VT323', monospace;
+  font-size: 34px;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.timer-panel.timer-warning .timer-value {
+  color: #fbbf24;
+}
+
+.timer-panel.timer-critical .timer-value {
+  color: #f87171;
+}
+
+.timer-bar {
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #6366f1);
+  border-radius: 3px;
+  transition: width 1s linear, background 0.3s;
+}
+
+.timer-panel.timer-warning .timer-bar-fill {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.timer-panel.timer-critical .timer-bar-fill {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
 }
 
 .ante-info {
