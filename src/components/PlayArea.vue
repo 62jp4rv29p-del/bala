@@ -270,19 +270,21 @@ export default {
 }
 
 .deck-card-3 {
-  background: #3b1d8a;
+  background: url('/card-back.png') center/cover no-repeat;
   bottom: -4px;
   right: -4px;
+  opacity: 0.6;
 }
 
 .deck-card-2 {
-  background: #4c28a8;
+  background: url('/card-back.png') center/cover no-repeat;
   bottom: -2px;
   right: -2px;
+  opacity: 0.8;
 }
 
 .deck-card-1 {
-  background: linear-gradient(135deg, #6d28d9, #7c3aed, #4c1d95);
+  background: url('/card-back.png') center/cover no-repeat;
   bottom: 0;
   right: 0;
   display: flex;
@@ -293,6 +295,7 @@ export default {
 .deck-count {
   font-family: 'VT323', monospace;
   font-size: 32px;
-  color: rgba(255,255,255,0.7);
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
 </style>
