@@ -270,21 +270,21 @@ export default {
 }
 
 .deck-card-3 {
-  background: url('/card-back.png') center/cover no-repeat;
+  background: url('/card-back.jpg') center/cover no-repeat;
   bottom: -4px;
   right: -4px;
   opacity: 0.6;
 }
 
 .deck-card-2 {
-  background: url('/card-back.png') center/cover no-repeat;
+  background: url('/card-back.jpg') center/cover no-repeat;
   bottom: -2px;
   right: -2px;
   opacity: 0.8;
 }
 
 .deck-card-1 {
-  background: url('/card-back.png') center/cover no-repeat;
+  background: url('/card-back.jpg') center/cover no-repeat;
   bottom: 0;
   right: 0;
   display: flex;

@@ -382,7 +382,7 @@ export default {
         'top: ' + (fromY - toRect.height / 2) + 'px',
         'width: ' + toRect.width + 'px',
         'height: ' + toRect.height + 'px',
-        'background: url(/card-back.png) center/cover no-repeat',
+        'background: url(/card-back.jpg) center/cover no-repeat',
         'border-radius: 8px',
         'border: 2px solid #1a0f24',
         'box-shadow: 0 4px 12px rgba(0,0,0,0.6)',
