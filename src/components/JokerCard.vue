@@ -226,4 +226,20 @@ export default {
   border-color: #c084fc;
   box-shadow: 0 0 16px rgba(192, 132, 252, 0.6);
 }
+
+/* ── 移动端横屏适配 ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .joker-card {
+    width: 76px;
+    height: 108px;
+    border-radius: 8px;
+  }
+
+  .joker-emoji  { font-size: 26px; }
+  .joker-name   { font-size: 8px; padding: 0 4px; }
+  .joker-desc   { font-size: 7px; padding: 0 5px; line-height: 1.3; }
+  .joker-rarity { font-size: 7px; padding: 1px 4px; }
+  .slot-plus    { font-size: 20px; }
+  .slot-label   { font-size: 8px; }
+}
 </style>

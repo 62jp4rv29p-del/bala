@@ -298,4 +298,59 @@ export default {
   color: #fff;
   text-shadow: 0 1px 4px rgba(0,0,0,0.8);
 }
+
+/* ── 移动端横屏适配 ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .play-area-wrapper {
+    padding: 6px 8px 4px;
+  }
+
+  .play-area-label {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+
+  .played-cards-row {
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .played-card {
+    width: 54px;
+    height: 78px;
+    border-radius: 6px;
+    padding: 4px;
+  }
+
+  .pc-rank { font-size: 10px; }
+  .pc-suit { font-size: 8px; }
+  .pc-center { font-size: 18px; }
+
+  .deck-pile {
+    width: 54px;
+    height: 78px;
+    bottom: 8px;
+    right: 8px;
+  }
+
+  .deck-card {
+    width: 54px;
+    height: 78px;
+    border-radius: 6px;
+  }
+
+  .deck-count { font-size: 22px; }
+
+  .score-popup {
+    padding: 7px 12px;
+    gap: 5px;
+    border-radius: 8px;
+  }
+
+  .score-popup-chips { font-size: 11px; }
+  .score-popup-x     { font-size: 9px; }
+  .score-popup-mult  { font-size: 11px; }
+  .score-popup-eq    { font-size: 9px; }
+  .score-popup-score { font-size: 13px; }
+}
 </style>

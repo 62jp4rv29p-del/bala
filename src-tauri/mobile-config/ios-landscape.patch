@@ -1,0 +1,18 @@
+# iOS 强制横屏配置说明
+# 运行 `npm run tauri:ios:init` 后，找到以下文件：
+# src-tauri/gen/apple/balatro_iOS/balatro_iOS.entitlements 同级的 Info.plist
+#
+# 将 UISupportedInterfaceOrientations 键的值改为只含横屏：
+#
+# <key>UISupportedInterfaceOrientations</key>
+# <array>
+#     <string>UIInterfaceOrientationLandscapeLeft</string>
+#     <string>UIInterfaceOrientationLandscapeRight</string>
+# </array>
+#
+# iPad 同样需要设置（若支持 iPad）：
+# <key>UISupportedInterfaceOrientations~ipad</key>
+# <array>
+#     <string>UIInterfaceOrientationLandscapeLeft</string>
+#     <string>UIInterfaceOrientationLandscapeRight</string>
+# </array>

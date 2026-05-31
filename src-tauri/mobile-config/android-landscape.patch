@@ -1,0 +1,18 @@
+# Android 强制横屏配置说明
+# 运行 `npm run tauri:android:init` 后，找到以下文件：
+# src-tauri/gen/android/app/src/main/AndroidManifest.xml
+#
+# 在 <activity ... > 标签内添加以下属性：
+#   android:screenOrientation="landscape"
+#   android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+#
+# 修改后示例：
+# <activity
+#     android:name=".MainActivity"
+#     android:exported="true"
+#     android:screenOrientation="landscape"
+#     android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+#     android:label="@string/app_name"
+#     android:theme="@style/Theme.App.SplashScreen">
+#   ...
+# </activity>

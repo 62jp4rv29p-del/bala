@@ -208,4 +208,39 @@ export default {
   0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
   50% { box-shadow: 0 0 20px 6px rgba(168, 85, 247, 0.5); }
 }
+
+/* ── 移动端横屏适配 ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hand-area-wrapper {
+    padding: 0 8px 8px;
+  }
+
+  .hand-cards-row {
+    gap: 4px;
+    padding-top: 8px;
+  }
+
+  .action-buttons-row {
+    gap: 6px;
+    padding-top: 10px;
+    flex-wrap: nowrap;
+  }
+
+  .sort-group {
+    gap: 4px;
+  }
+
+  .px-btn {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  .sort-btn {
+    min-height: 30px;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+}
 </style>

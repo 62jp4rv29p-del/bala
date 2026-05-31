@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRD：小丑牌 Tauri 跨端适配</title>
+  <style>
+    :root {
+      --blue: #3b82f6;
+      --indigo: #6366f1;
+      --yellow: #fbbf24;
+      --green: #10b981;
+      --red: #ef4444;
+      --purple: #a855f7;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --border: rgba(99,102,241,0.25);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .doc-header {
+      border-left: 4px solid var(--yellow);
+      padding: 20px 24px;
+      background: var(--surface);
+      border-radius: 12px;
+      margin-bottom: 32px;
+    }
+    .doc-header h1 {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--yellow);
+      margin-bottom: 12px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .meta-item { font-size: 13px; color: var(--muted); }
+    .meta-item strong { color: var(--text); }
+
+    /* ── Section ── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .num {
+      background: var(--blue);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--indigo);
+      margin: 18px 0 8px;
+    }
+    h3:first-child { margin-top: 0; }
+
+    p { margin-bottom: 10px; color: var(--text); }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 10px;
+    }
+    li { margin-bottom: 5px; }
+
+    /* ── Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+    th {
+      background: rgba(99,102,241,0.15);
+      color: var(--indigo);
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── Priority badges ── */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .p0 { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+    .p1 { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.4); }
+    .p2 { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+
+    /* ── Platform pills ── */
+    .platforms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .platform {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .android { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.35); }
+    .ios     { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.35); }
+    .macos   { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.35); }
+    .windows { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.35); }
+    .web     { background: rgba(239,68,68,0.1);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+    /* ── Checklist ── */
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .check-box {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── Out of scope ── */
+    .out-of-scope li::marker { color: var(--red); }
+
+    /* ── User story block ── */
+    .story-block {
+      background: rgba(10,15,40,0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+    .story-block .label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--indigo);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .story-block .given { color: var(--green); }
+    .story-block .when  { color: var(--yellow); }
+    .story-block .then  { color: var(--blue); }
+
+    /* ── Risk level ── */
+    .risk-high   { color: #f87171; font-weight: 700; }
+    .risk-mid    { color: #fbbf24; font-weight: 700; }
+    .risk-low    { color: #34d399; font-weight: 700; }
+
+    /* ── Milestone timeline ── */
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--border);
+    }
+    .tl-item {
+      position: relative;
+      margin-bottom: 18px;
+    }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--indigo);
+    }
+    .tl-week {
+      font-size: 11px;
+      color: var(--indigo);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .tl-title { font-weight: 700; margin-bottom: 2px; }
+    .tl-desc { font-size: 13px; color: var(--muted); }
+
+    /* ── Revision table ── */
+    .revision td:first-child { color: var(--muted); font-family: monospace; }
+
+    blockquote {
+      border-left: 3px solid var(--indigo);
+      padding: 8px 16px;
+      margin: 10px 0;
+      background: rgba(99,102,241,0.06);
+      border-radius: 0 8px 8px 0;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    code {
+      background: rgba(255,255,255,0.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'SF Mono', Menlo, monospace;
+      color: #c084fc;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Header ── -->
+  <div class="doc-header">
+    <h1>📋 PRD：小丑牌 Tauri 跨端适配</h1>
+    <div class="meta-row">
+      <div class="meta-item"><strong>版本</strong>：v1.0</div>
+      <div class="meta-item"><strong>状态</strong>：草稿</div>
+      <div class="meta-item"><strong>日期</strong>：2026-05-31</div>
+      <div class="meta-item"><strong>作者</strong>：PM</div>
+      <div class="meta-item"><strong>迭代轮次</strong>：第 5 轮（共 6 轮）</div>
+    </div>
+  </div>
+
+  <!-- ── 一、背景与目标 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span>背景与目标</div>
+
+    <h3>问题陈述</h3>
+    <blockquote>
+      当前「小丑牌」游戏仅有网页版（Vue 3 + Vite），无法以原生 App 形式分发到 Android / iOS / macOS / Windows 平台，用户需要打开浏览器才能游玩，体验割裂，且无法上架应用商店。
+    </blockquote>
+
+    <h3>目标平台</h3>
+    <div class="platforms">
+      <span class="platform android">Android</span>
+      <span class="platform ios">iOS</span>
+      <span class="platform macos">macOS</span>
+      <span class="platform windows">Windows</span>
+      <span class="platform web">网页版（保持现状）</span>
+    </div>
+
+    <h3>产品目标</h3>
+    <ul>
+      <li>用 Tauri 2 把现有 Vue 3 网页游戏打包为 5 端原生/混合 App，一套代码多端分发</li>
+      <li>移动端（Android / iOS）强制横屏，保证游戏可玩性</li>
+      <li>UI 层面在移动端小屏幕（横屏高度 ≤ 500px）下保持完整可操作，不裁掉任何功能</li>
+      <li>网页版现有布局、交互、体验<strong>完全不受影响</strong></li>
+      <li>本轮<strong>不改动任何游戏逻辑</strong>（composables 层代码冻结）</li>
+    </ul>
+
+    <h3>成功指标</h3>
+    <table>
+      <tr><th>指标</th><th>定义</th><th>目标值</th></tr>
+      <tr><td>跨端构建通过率</td><td>5 个平台均能成功构建且启动</td><td>5/5</td></tr>
+      <tr><td>网页版回归</td><td>现有网页版功能无任何 UI 回归</td><td>0 个回归</td></tr>
+      <tr><td>移动端可操作性</td><td>手机横屏下所有按钮可点击、牌可见</td><td>100%</td></tr>
+      <tr><td>强制横屏生效</td><td>Android / iOS 竖屏时弹出旋转提示或系统锁定横屏</td><td>两端均生效</td></tr>
+    </table>
+  </div>
+
+  <!-- ── 二、目标用户 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span>目标用户</div>
+
+    <h3>用户画像</h3>
+    <p><strong>主要用户</strong>：课程学员 / 开发者，在手机 / 平板 / 电脑上体验游戏，关注跨端一致性</p>
+    <p><strong>次要用户</strong>：移动端休闲玩家，习惯横屏操作卡牌游戏</p>
+
+    <h3>用户旅程（移动端）</h3>
+    <ol>
+      <li>用户在手机上安装小丑牌 App（Android APK 或 iOS IPA）</li>
+      <li>竖屏打开时，看到「请横屏游玩」提示，将手机横过来</li>
+      <li>进入游戏开始界面，触摸操作正常，UI 完整可见</li>
+      <li>完成一局游戏，体验与网页版功能一致</li>
+    </ol>
+  </div>
+
+  <!-- ── 三、需求详述 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span>需求详述</div>
+
+    <h3>功能清单（按优先级）</h3>
+    <ul class="checklist">
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p0">P0</span><strong>Tauri 2 集成</strong>：在现有 Vue 3 + Vite 项目中引入 <code>@tauri-apps/cli@^2</code> 与 <code>@tauri-apps/api@^2</code>，完成 <code>src-tauri</code> 初始化，保证 <code>npm run dev</code> 与 Tauri dev 模式并存不冲突</div>
+      </li>
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p0">P0</span><strong>移动端强制横屏</strong>：Android 通过 <code>AndroidManifest.xml</code> 设置 <code>screenOrientation="landscape"</code>；iOS 通过 <code>Info.plist</code> 限定 <code>UISupportedInterfaceOrientations</code> 为 landscape。前端兜底：竖屏时显示「请横屏游玩」全屏遮罩</div>
+      </li>
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p0">P0</span><strong>移动端横屏小屏 UI 适配</strong>：手机横屏场景（高度 ≤ 500px），SideBar 宽度收窄、字号缩小；HandArea 卡牌缩小（100×145 → 60×88px）、操作按钮紧凑；PlayArea 出牌区卡牌与牌堆等比缩放</div>
+      </li>
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p0">P0</span><strong>Viewport meta 适配</strong>：禁止用户双指缩放（<code>user-scalable=no</code>），防止移动端误触放大破坏布局</div>
+      </li>
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p1">P1</span><strong>桌面端窗口配置</strong>：macOS / Windows 设置初始窗口尺寸 1280×800，最小尺寸 900×560，防止窗口过小导致布局错乱</div>
+      </li>
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p1">P1</span><strong>网页版零回归</strong>：所有移动端适配样式通过媒体查询隔离（<code>@media (max-height: 500px) and (orientation: landscape)</code>），桌面浏览器不触发</div>
+      </li>
+      <li>
+        <div class="check-box"></div>
+        <div><span class="badge p2">P2</span><strong>触摸友好性</strong>：移动端按钮点击区域 ≥ 36px，防止误触</div>
+      </li>
+    </ul>
+
+    <h3>User Story</h3>
+
+    <div class="story-block">
+      <div class="label">Story 1 — 移动端强制横屏</div>
+      <p>作为 <strong>手机玩家</strong>，我希望 <strong>打开游戏时自动锁定横屏</strong>，以便 <strong>无需手动旋转手机即可看到完整界面</strong>。</p>
+      <p class="given">Given 用户以竖屏方向打开 App</p>
+      <p class="when">When App 加载完成</p>
+      <p class="then">Then 系统弹出横屏锁定（或显示「请横屏游玩」遮罩），游戏主界面不在竖屏下渲染</p>
+    </div>
+
+    <div class="story-block">
+      <div class="label">Story 2 — 移动端横屏可玩</div>
+      <p>作为 <strong>手机玩家（横屏）</strong>，我希望 <strong>所有手牌、按钮、侧边栏信息都在屏幕内可见且可点击</strong>，以便 <strong>正常游玩而不需要滚动</strong>。</p>
+      <p class="given">Given 用户使用主流手机横屏（高度约 360–430px）</p>
+      <p class="when">When 进入游戏 playing 阶段</p>
+      <p class="then">Then 侧边栏、出牌区、手牌区、操作按钮全部无遮挡可见，无需滚动</p>
+    </div>
+
+    <div class="story-block">
+      <div class="label">Story 3 — 网页版零回归</div>
+      <p>作为 <strong>网页版玩家</strong>，我希望 <strong>跨端适配改动后网页版界面与之前完全一致</strong>，以便 <strong>不受任何影响</strong>。</p>
+      <p class="given">Given 用户在桌面浏览器访问网页版（宽度 > 900px）</p>
+      <p class="when">When 游戏正常运行</p>
+      <p class="then">Then 布局、字号、动画与改动前 100% 一致，无任何视觉差异</p>
+    </div>
+  </div>
+
+  <!-- ── 四、交互与边界 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span>交互与边界</div>
+
+    <h3>各端布局策略</h3>
+    <table>
+      <tr><th>平台</th><th>屏幕特征</th><th>布局策略</th></tr>
+      <tr><td>网页版 / 桌面</td><td>宽 ≥ 900px</td><td>原有布局，完全不变</td></tr>
+      <tr><td>macOS / Windows App</td><td>窗口 1280×800，可缩放</td><td>原有布局 + 最小窗口限制</td></tr>
+      <tr><td>手机横屏（Android/iOS）</td><td>高度 360–500px</td><td>紧凑模式：侧栏收窄、卡牌缩小、按钮压缩</td></tr>
+      <tr><td>手机竖屏</td><td>宽度 &lt; 高度</td><td>全屏「请横屏游玩」遮罩，不渲染游戏</td></tr>
+      <tr><td>平板横屏</td><td>高度 ≥ 600px</td><td>与桌面端一致，走原有布局</td></tr>
+    </table>
+
+    <h3>媒体查询断点</h3>
+    <table>
+      <tr><th>断点</th><th>触发条件</th><th>作用</th></tr>
+      <tr><td>移动端横屏紧凑模式</td><td><code>max-height: 500px</code> + <code>orientation: landscape</code></td><td>SideBar / HandArea / PlayArea / PlayingCard 缩放</td></tr>
+      <tr><td>移动端竖屏遮罩</td><td><code>max-width: 768px</code> + <code>orientation: portrait</code></td><td>显示旋转提示层</td></tr>
+    </table>
+
+    <h3>不在本轮范围内（Out of Scope）</h3>
+    <ul class="out-of-scope">
+      <li>任何游戏逻辑修改（出牌、计分、AI、Joker 效果等）</li>
+      <li>触摸手势扩展（滑动出牌、长按选牌等）</li>
+      <li>实际上架 App Store / Google Play</li>
+      <li>平板竖屏布局优化</li>
+      <li>推送通知、后台运行等原生能力</li>
+      <li>性能优化、包体积压缩</li>
+    </ul>
+  </div>
+
+  <!-- ── 五、技术方案 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span>技术方案与依赖</div>
+
+    <h3>技术栈</h3>
+    <table>
+      <tr><th>层次</th><th>技术</th><th>说明</th></tr>
+      <tr><td>前端框架</td><td>Vue 3 + Vite</td><td>现有代码，不改动逻辑层</td></tr>
+      <tr><td>跨端框架</td><td>Tauri 2</td><td>Rust 内核，WebView 渲染，包体积小于 Electron</td></tr>
+      <tr><td>移动端构建</td><td>tauri android / tauri ios</td><td>需要 Android SDK / Xcode</td></tr>
+      <tr><td>强制横屏</td><td>AndroidManifest.xml + Info.plist + CSS media query</td><td>原生锁屏 + 前端兜底</td></tr>
+      <tr><td>响应式适配</td><td>CSS Media Query（Scoped）</td><td>不影响现有网页版样式</td></tr>
+    </table>
+
+    <h3>关键文件变更清单</h3>
+    <table>
+      <tr><th>文件</th><th>变更类型</th><th>说明</th></tr>
+      <tr><td><code>package.json</code></td><td>新增依赖</td><td>@tauri-apps/cli@^2, @tauri-apps/api@^2</td></tr>
+      <tr><td><code>src-tauri/</code></td><td>新增目录</td><td>Tauri Rust 工程，含 tauri.conf.json</td></tr>
+      <tr><td><code>index.html</code></td><td>修改</td><td>补充移动端 viewport meta</td></tr>
+      <tr><td><code>src/App.vue</code></td><td>修改（仅样式+模板）</td><td>添加竖屏旋转提示层及 CSS</td></tr>
+      <tr><td><code>src/components/SideBar.vue</code></td><td>修改（仅样式）</td><td>移动端紧凑模式媒体查询</td></tr>
+      <tr><td><code>src/components/HandArea.vue</code></td><td>修改（仅样式）</td><td>移动端按钮 / 间距缩放</td></tr>
+      <tr><td><code>src/components/PlayingCard.vue</code></td><td>修改（仅样式）</td><td>移动端卡牌尺寸 60×88px</td></tr>
+      <tr><td><code>src/components/PlayArea.vue</code></td><td>修改（仅样式）</td><td>移动端出牌区卡牌 / 牌堆缩放</td></tr>
+      <tr><td><code>src-tauri/gen/android/…/AndroidManifest.xml</code></td><td>修改</td><td>screenOrientation="landscape"（android init 后配置）</td></tr>
+      <tr><td><code>src-tauri/gen/apple/…/Info.plist</code></td><td>修改</td><td>锁定 landscape 方向（ios init 后配置）</td></tr>
+    </table>
+
+    <h3>前置环境要求</h3>
+    <table>
+      <tr><th>工具</th><th>版本要求</th><th>用途</th></tr>
+      <tr><td>Rust / Cargo</td><td>≥ 1.77</td><td>Tauri 编译必需</td></tr>
+      <tr><td>Node.js</td><td>≥ 18</td><td>前端构建</td></tr>
+      <tr><td>Android Studio + NDK</td><td>NDK r25+</td><td>Android 打包</td></tr>
+      <tr><td>Xcode</td><td>≥ 15（macOS only）</td><td>iOS 打包</td></tr>
+    </table>
+  </div>
+
+  <!-- ── 六、风险 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span>风险与假设</div>
+
+    <table>
+      <tr><th>风险</th><th>概率</th><th>影响</th><th>应对策略</th></tr>
+      <tr>
+        <td>Tauri 2 iOS/Android 仍为 Beta，API 可能变动</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-high">高</span></td>
+        <td>锁定 Tauri 版本；本轮仅做 UI 适配，不调用原生 API，降低风险面</td>
+      </tr>
+      <tr>
+        <td>部分手机横屏高度 &lt; 360px，紧凑布局仍溢出</td>
+        <td><span class="risk-low">低</span></td>
+        <td><span class="risk-mid">中</span></td>
+        <td>以 iPhone SE 横屏（高度 375px）为最小基准测试；极端情况允许内容区滚动</td>
+      </tr>
+      <tr>
+        <td>iOS WKWebView 字体渲染与桌面差异导致卡牌显示异常</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-low">低</span></td>
+        <td>字体使用系统 fallback（PingFang SC），Google Fonts 仅作增强</td>
+      </tr>
+      <tr>
+        <td>Android NDK 环境未安装导致构建失败</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-mid">中</span></td>
+        <td>构建前检查 NDK 环境；macOS/Windows 构建不依赖 NDK</td>
+      </tr>
+    </table>
+
+    <h3>关键假设</h3>
+    <ul>
+      <li>游戏逻辑（composables）本轮完全冻结，不存在因适配引起的逻辑 bug</li>
+      <li>目标手机横屏高度 ≥ 360px（覆盖市面 95% 以上机型）</li>
+      <li>网页版用户使用桌面浏览器，不会触发移动端媒体查询断点</li>
+      <li>Tauri 生成的 WebView 支持标准 CSS media query</li>
+    </ul>
+  </div>
+
+  <!-- ── 七、里程碑 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span>里程碑</div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-week">W1 · 当前</div>
+        <div class="tl-title">环境搭建 + Tauri 初始化</div>
+        <div class="tl-desc">安装 Rust、Tauri 2；初始化 src-tauri；配置 tauri.conf.json；写需求文档</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-week">W1 · 进行中</div>
+        <div class="tl-title">移动端 UI 适配</div>
+        <div class="tl-desc">添加媒体查询：竖屏遮罩 + 横屏小屏紧凑模式；SideBar / HandArea / PlayArea / PlayingCard 全部适配完成</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-week">W2</div>
+        <div class="tl-title">原生强制横屏配置</div>
+        <div class="tl-desc">运行 tauri android init / tauri ios init；配置 AndroidManifest.xml 和 Info.plist 锁定横屏</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-week">W2</div>
+        <div class="tl-title">联调验收</div>
+        <div class="tl-desc">在真机 / 模拟器验证 5 端；网页版回归测试；修复发现的适配问题</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-week">W3</div>
+        <div class="tl-title">第 5 轮交付</div>
+        <div class="tl-desc">5 端均可构建启动，网页版无回归，移动端横屏可完整游玩</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 八、附录 ── -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span>附录</div>
+
+    <h3>参考资料</h3>
+    <ul>
+      <li>Tauri 2 官方文档：<code>https://tauri.app/v2/</code></li>
+      <li>Tauri Mobile（Beta）：<code>https://tauri.app/blog/tauri-2-0-0-released/</code></li>
+      <li>Android screenOrientation 文档：<code>developer.android.com/guide/topics/manifest/activity-element</code></li>
+      <li>iOS UISupportedInterfaceOrientations：<code>developer.apple.com/documentation/bundleresources/information_property_list</code></li>
+    </ul>
+
+    <h3>修订历史</h3>
+    <table class="revision">
+      <tr><th>版本</th><th>日期</th><th>修改内容</th><th>修改人</th></tr>
+      <tr><td>v1.0</td><td>2026-05-31</td><td>初稿，覆盖 Tauri 集成 + 移动端横屏适配需求</td><td>PM</td></tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

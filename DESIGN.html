@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小丑牌 Tauri 跨端适配 — 设计效果图</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ========== 全局重置 & 设计稿页面 ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #04091a;
+      color: #e2e8f0;
+      font-family: 'Inter', 'PingFang SC', 'Helvetica Neue', sans-serif;
+      padding: 48px 32px;
+      min-width: 1100px;
+    }
+
+    /* ========== 页面大标题 ========== */
+    .page-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .page-header h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 18px;
+      color: #fbbf24;
+      line-height: 1.6;
+      text-shadow: 0 0 20px rgba(251,191,36,0.4);
+      margin-bottom: 12px;
+    }
+    .page-header p {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    /* ========== Scene 容器 ========== */
+    .scene {
+      margin-bottom: 64px;
+    }
+    .scene-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      color: #fbbf24;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 12px rgba(251,191,36,0.3);
+    }
+    .scene-desc {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    /* ========== 设备框架通用 ========== */
+    .device-frame {
+      display: inline-block;
+      border-radius: 20px;
+      border: 2px solid #1e3a5f;
+      box-shadow:
+        0 0 0 6px #0d1f3c,
+        0 0 0 8px #1e3a5f,
+        0 20px 60px rgba(0,0,0,0.6),
+        0 0 40px rgba(30,58,95,0.3);
+      overflow: hidden;
+      position: relative;
+    }
+    .device-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(251,191,36,0.3), transparent);
+      z-index: 10;
+    }
+
+    /* ========== 游戏背景 ========== */
+    .game-bg {
+      background: linear-gradient(135deg, #0a1438 0%, #1a2858 50%, #0a1438 100%);
+    }
+
+    /* ===============================================
+       SCENE A — 手机竖屏遮罩
+    =============================================== */
+    .scene-a-phone {
+      width: 320px;
+      height: 568px;
+    }
+    .rotate-prompt {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      background: linear-gradient(135deg, #0a1438 0%, #1a2858 50%, #0a1438 100%);
+    }
+    .rotate-icon-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100px;
+      height: 100px;
+      border: 2px solid rgba(251,191,36,0.3);
+      border-radius: 16px;
+      background: rgba(251,191,36,0.05);
+    }
+    .rotate-icon {
+      font-size: 64px;
+      color: #fbbf24;
+      animation: rotateHint 1.5s ease-in-out infinite;
+      display: block;
+      line-height: 1;
+    }
+    @keyframes rotateHint {
+      0%, 100% { transform: rotate(0deg); }
+      50%       { transform: rotate(90deg); }
+    }
+    .rotate-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 4px;
+    }
+    .rotate-sub {
+      font-size: 11px;
+      color: #64748b;
+      letter-spacing: 1px;
+    }
+
+    /* ===============================================
+       SCENE B — 手机横屏核心场景
+    =============================================== */
+    .scene-b-phone {
+      width: 667px;
+      height: 375px;
+    }
+    .game-layout {
+      width: 100%;
+      height: 100%;
+      max-height: 375px;  /* 强制不超过设备框高度 */
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    /* --- SideBar --- */
+    .sidebar {
+      width: 160px;
+      min-width: 160px;
+      height: 100%;
+      background: linear-gradient(180deg, #0e1b3d 0%, #0a1438 100%);
+      border-right: 1px solid rgba(30,58,95,0.8);
+      display: flex;
+      flex-direction: column;
+      padding: 6px 6px;
+      gap: 3px;
+      overflow: hidden;
+    }
+    .sb-logo {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: #fbbf24;
+      text-align: center;
+      padding: 3px 0;
+      letter-spacing: 1px;
+    }
+    .sb-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+    .sb-label {
+      font-size: 8px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .sb-value-amber {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: #fbbf24;
+    }
+    .sb-value-blue {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: #60a5fa;
+    }
+    .sb-value-white {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: #e2e8f0;
+    }
+    .sb-chips-mult {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chips-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: #60a5fa;
+    }
+    .mult-sep {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .mult-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: #f87171;
+    }
+    .sb-resources {
+      display: flex;
+      gap: 4px;
+    }
+    .sb-res-item {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 5px;
+      padding: 4px;
+      text-align: center;
+    }
+    .sb-res-label {
+      font-size: 7px;
+      color: #64748b;
+      display: block;
+    }
+    .sb-res-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: #e2e8f0;
+    }
+    .sb-res-val.red { color: #fb7185; }
+    .sb-coins {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .coins-sign {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: #fbbf24;
+    }
+    .coins-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: #fbbf24;
+    }
+    .sb-ante {
+      font-size: 8px;
+      color: #64748b;
+      text-align: center;
+    }
+    .sb-restart-btn {
+      background: linear-gradient(180deg, #374151, #1f2937);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 6px;
+      color: #94a3b8;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 7px 8px;
+      text-align: center;
+      cursor: pointer;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* --- 主区域 --- */
+    .main-area {
+      flex: 1;
+      height: 375px;
+      display: grid;
+      grid-template-rows: minmax(0, 130px) 1fr 175px;
+      overflow: visible;
+    }
+
+    /* Row 1: Joker 区 */
+    .joker-area {
+      height: 130px;
+      max-height: 130px;
+      padding: 6px 8px 4px;
+      position: relative;
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .joker-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .joker-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .joker-badge {
+      font-size: 9px;
+      background: rgba(99,102,241,0.2);
+      color: #818cf8;
+      padding: 1px 5px;
+      border-radius: 10px;
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    .settings-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 34px;
+      height: 34px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      color: #94a3b8;
+    }
+    .joker-slots {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+    .joker-slot {
+      width: 56px;
+      height: 76px;
+      border-radius: 8px;
+      border: 2px dashed rgba(99,102,241,0.4);
+      background: rgba(99,102,241,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 3px;
+      color: rgba(99,102,241,0.4);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .joker-slot.filled {
+      border: 2px solid rgba(251,191,36,0.5);
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #1a2858;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .joker-slot-label {
+      font-size: 6px;
+      color: rgba(99,102,241,0.4);
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* Row 2: 出牌区 */
+    .play-area {
+      position: relative;
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      overflow: visible;   /* 允许牌堆叠牌阴影超出 */
+      min-height: 0;
+      background: rgba(255,255,255,0.025);
+    }
+    .played-cards-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      justify-content: center;
+      padding-right: 58px; /* 给牌堆留位置 */
+    }
+    .played-card {
+      width: 42px;
+      height: 58px;
+      background: #ffffff;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+    .card-top-left {
+      align-self: flex-start;
+      line-height: 1.1;
+    }
+    .card-rank {
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .card-suit-small {
+      font-size: 9px;
+      line-height: 1;
+    }
+    .card-center {
+      font-size: 20px;
+      line-height: 1;
+    }
+    .card-bottom-right {
+      align-self: flex-end;
+      transform: rotate(180deg);
+      line-height: 1.1;
+    }
+    .red-card .card-rank,
+    .red-card .card-suit-small,
+    .red-card .card-center { color: #ef4444; }
+    .black-card .card-rank,
+    .black-card .card-suit-small,
+    .black-card .card-center { color: #1e293b; }
+
+    /* 牌堆 */
+    .deck-pile {
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+      width: 42px;
+      height: 58px;
+      z-index: 2;
+    }
+    .deck-card-back {
+      position: absolute;
+      width: 42px;
+      height: 58px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);
+      border-radius: 6px;
+      border: 1px solid rgba(96,165,250,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .deck-card-back::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px solid rgba(96,165,250,0.2);
+      border-radius: 4px;
+    }
+    .deck-card-back:nth-child(1) { transform: translateY(-3px) rotate(-2deg); }
+    .deck-card-back:nth-child(2) { transform: translateY(-1.5px) rotate(-1deg); }
+    .deck-card-back:nth-child(3) { transform: translateY(0); }
+    .deck-count {
+      position: absolute;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #ffffff;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    /* Row 3: 手牌区 */
+    .hand-area {
+      height: 175px;
+      max-height: 175px;
+      padding: 0 8px 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .hand-cards-row {
+      display: flex;
+      gap: 4px;
+      padding-top: 8px;
+      align-items: flex-end;
+      flex: 1;
+      overflow: hidden;
+    }
+    .hand-card {
+      width: 60px;
+      height: 88px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+    .hand-card.selected {
+      transform: translateY(-16px);
+      border: 2px solid #fbbf24;
+      box-shadow: 0 0 12px rgba(251,191,36,0.4);
+    }
+    .hand-card .card-center { font-size: 22px; }
+
+    /* 操作按钮行 */
+    .action-buttons-row {
+      display: flex;
+      gap: 6px;
+      padding-top: 10px;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+    .sort-group {
+      display: flex;
+      gap: 4px;
+    }
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Inter', 'PingFang SC', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      min-height: 36px;
+      padding: 6px 10px;
+      color: #ffffff;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-sort {
+      min-height: 30px;
+      padding: 5px 8px;
+      font-size: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #94a3b8;
+    }
+    .btn-play {
+      background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+      box-shadow: 0 2px 8px rgba(52,211,153,0.3);
+    }
+    .btn-discard {
+      background: linear-gradient(180deg, #fb7185 0%, #dc2626 100%);
+      box-shadow: 0 2px 8px rgba(251,113,133,0.3);
+    }
+    .btn-ai {
+      background: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%);
+      box-shadow: 0 2px 8px rgba(192,132,252,0.3);
+    }
+    .btn-count {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 1px 5px;
+      font-size: 10px;
+    }
+
+    /* ===============================================
+       SCENE C — 过渡动效时序图
+    =============================================== */
+    .transition-timeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 20px 0;
+    }
+    .timeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .timeline-label {
+      font-size: 11px;
+      color: #fbbf24;
+      font-family: 'Press Start 2P', monospace;
+      text-align: center;
+    }
+    .timeline-sub {
+      font-size: 10px;
+      color: #64748b;
+      text-align: center;
+      max-width: 180px;
+      line-height: 1.5;
+    }
+    .timeline-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      gap: 4px;
+      padding-bottom: 40px;
+    }
+    .arrow-line {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(99,102,241,0.4), rgba(251,191,36,0.6));
+    }
+    .arrow-tip {
+      color: #fbbf24;
+      font-size: 12px;
+      margin-top: -8px;
+      margin-left: 54px;
+    }
+    .arrow-time {
+      font-size: 10px;
+      color: #64748b;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* 过渡帧设备框 */
+    .frame-portrait {
+      width: 180px;
+      height: 270px;
+      background: linear-gradient(135deg, #0a1438 0%, #1a2858 100%);
+      border-radius: 16px;
+      border: 2px solid #1e3a5f;
+      box-shadow: 0 0 0 4px #0d1f3c, 0 8px 24px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .frame-portrait.fading {
+      opacity: 0.5;
+    }
+    .frame-landscape {
+      width: 270px;
+      height: 180px;
+      background: linear-gradient(135deg, #0a1438 0%, #1a2858 100%);
+      border-radius: 16px;
+      border: 2px solid rgba(52,211,153,0.4);
+      box-shadow: 0 0 0 4px #0d1f3c, 0 0 20px rgba(52,211,153,0.15), 0 8px 24px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .frame-icon-big {
+      font-size: 48px;
+      color: #fbbf24;
+      animation: rotateHint 1.5s ease-in-out infinite;
+    }
+    .frame-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 2px;
+    }
+    .frame-sub-text {
+      font-size: 9px;
+      color: #64748b;
+    }
+    .frame-transition-ring {
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(251,191,36,0.4);
+      border-top-color: #fbbf24;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .frame-game-mini {
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+    .frame-sidebar-mini {
+      width: 60px;
+      height: 100%;
+      background: rgba(14,27,61,0.8);
+      border-right: 1px solid rgba(30,58,95,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 6px 5px;
+    }
+    .mini-sb-block {
+      height: 14px;
+      border-radius: 3px;
+      background: rgba(99,102,241,0.2);
+    }
+    .mini-sb-block:first-child { background: rgba(251,191,36,0.3); }
+    .mini-sb-block.tall { height: 24px; background: rgba(96,165,250,0.25); }
+    .frame-main-mini {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 5px;
+      gap: 4px;
+    }
+    .mini-joker-row {
+      height: 40px;
+      background: rgba(99,102,241,0.1);
+      border-radius: 4px;
+      display: flex;
+      gap: 3px;
+      align-items: center;
+      padding: 4px;
+    }
+    .mini-joker-slot {
+      width: 22px;
+      height: 30px;
+      border-radius: 3px;
+      border: 1px dashed rgba(99,102,241,0.4);
+      background: rgba(99,102,241,0.07);
+    }
+    .mini-joker-slot:first-child {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border: none;
+    }
+    .mini-play-row {
+      flex: 1;
+      background: rgba(255,255,255,0.03);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    .mini-played-card {
+      width: 16px;
+      height: 22px;
+      background: white;
+      border-radius: 2px;
+    }
+    .mini-hand-row {
+      height: 38px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 4px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      padding: 4px;
+    }
+    .mini-hand-card {
+      width: 14px;
+      height: 20px;
+      background: white;
+      border-radius: 2px;
+    }
+    .mini-hand-card.sel { transform: translateY(-4px); background: #fef3c7; }
+    .frame-appear-label {
+      font-size: 11px;
+      color: #34d399;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* ===============================================
+       SCENE D — PC 桌面版
+    =============================================== */
+    .scene-d-wrap {
+      transform-origin: top left;
+      transform: scale(0.8);
+      width: 1000px;
+      height: 600px;
+      display: inline-block;
+    }
+    .scene-d-container {
+      /* 外层提供正确占位高度：600 * 0.8 = 480px */
+      height: 480px;
+      width: 800px;
+    }
+    .scene-d-pc {
+      width: 1000px;
+      height: 600px;
+    }
+
+    /* PC SideBar */
+    .sidebar-pc {
+      width: 280px;
+      min-width: 280px;
+      height: 100%;
+      background: linear-gradient(180deg, #0e1b3d 0%, #0a1438 100%);
+      border-right: 1px solid rgba(30,58,95,0.8);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .sb-pc-logo {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #fbbf24;
+      text-align: center;
+      padding: 4px 0;
+      text-shadow: 0 0 10px rgba(251,191,36,0.3);
+    }
+    .sb-pc-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .sb-pc-label {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .sb-pc-val-amber {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 22px;
+      color: #fbbf24;
+    }
+    .sb-pc-val-blue {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 28px;
+      color: #60a5fa;
+    }
+    .sb-pc-chips-mult {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pc-chips-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #60a5fa;
+    }
+    .pc-mult-sep {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .pc-mult-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #f87171;
+    }
+    .sb-pc-resources {
+      display: flex;
+      gap: 8px;
+    }
+    .sb-pc-res-item {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+    }
+    .sb-pc-res-label { font-size: 9px; color: #64748b; display: block; margin-bottom: 2px; }
+    .sb-pc-res-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 18px;
+      color: #e2e8f0;
+    }
+    .sb-pc-res-val.red { color: #fb7185; }
+    .sb-pc-coins {
+      display: flex; align-items: center; gap: 4px;
+    }
+    .pc-coins-sign {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 18px;
+      color: #fbbf24;
+    }
+    .pc-coins-val {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 30px;
+      color: #fbbf24;
+    }
+    .sb-pc-ante { font-size: 10px; color: #64748b; text-align: center; }
+    .sb-pc-restart {
+      background: linear-gradient(180deg, #374151, #1f2937);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 8px;
+      color: #94a3b8;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      padding: 14px 26px;
+      text-align: center;
+      cursor: pointer;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* PC 主区域 */
+    .main-area-pc {
+      flex: 1;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 230px 1fr 280px;
+      overflow: hidden;
+    }
+
+    /* PC Joker 区 */
+    .joker-area-pc {
+      padding: 12px 16px 8px;
+      position: relative;
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+    .joker-header-pc {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .joker-title-pc {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .joker-badge-pc {
+      font-size: 11px;
+      background: rgba(99,102,241,0.2);
+      color: #818cf8;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    .settings-btn-pc {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      color: #94a3b8;
+    }
+    .joker-slots-pc {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .joker-slot-pc {
+      width: 100px;
+      height: 145px;
+      border-radius: 10px;
+      border: 2px dashed rgba(99,102,241,0.4);
+      background: rgba(99,102,241,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      color: rgba(99,102,241,0.4);
+      font-size: 32px;
+    }
+    .joker-slot-pc.filled {
+      border: 2px solid rgba(251,191,36,0.5);
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #1a2858;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .joker-slot-label-pc {
+      font-size: 8px;
+      color: rgba(99,102,241,0.4);
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* PC 出牌区 */
+    .play-area-pc {
+      position: relative;
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+      padding: 12px 16px 8px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .played-cards-row-pc {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      justify-content: center;
+    }
+    .played-card-pc {
+      width: 90px;
+      height: 130px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .pc-card-rank { font-size: 14px; font-weight: 700; line-height: 1; }
+    .pc-card-suit-s { font-size: 10px; line-height: 1; }
+    .pc-card-center { font-size: 28px; line-height: 1; }
+    .pc-card-corner { transform: rotate(180deg); line-height: 1.1; }
+
+    /* PC 牌堆 */
+    .deck-pile-pc {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 90px;
+      height: 130px;
+    }
+    .deck-card-back-pc {
+      position: absolute;
+      width: 90px;
+      height: 130px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);
+      border-radius: 8px;
+      border: 1px solid rgba(96,165,250,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .deck-card-back-pc::before {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      border: 1px solid rgba(96,165,250,0.2);
+      border-radius: 5px;
+    }
+    .deck-card-back-pc:nth-child(1) { transform: translateY(-4px) rotate(-2deg); }
+    .deck-card-back-pc:nth-child(2) { transform: translateY(-2px) rotate(-1deg); }
+    .deck-card-back-pc:nth-child(3) { transform: translateY(0); }
+    .deck-count-pc {
+      position: absolute;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 22px;
+      color: #fff;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    /* PC 手牌区 */
+    .hand-area-pc {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .hand-cards-row-pc {
+      display: flex;
+      gap: 8px;
+      padding-top: 20px;
+      align-items: flex-end;
+      flex: 1;
+      overflow: hidden;
+    }
+    .hand-card-pc {
+      width: 100px;
+      height: 145px;
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+    .hand-card-pc.selected {
+      transform: translateY(-28px);
+      border: 2px solid #fbbf24;
+      box-shadow: 0 0 16px rgba(251,191,36,0.4);
+    }
+    .pc-hcard-rank { font-size: 14px; font-weight: 700; line-height: 1; }
+    .pc-hcard-suit { font-size: 11px; line-height: 1; }
+    .pc-hcard-center { font-size: 30px; line-height: 1; }
+
+    /* PC 操作按钮行 */
+    .action-buttons-row-pc {
+      display: flex;
+      gap: 10px;
+      padding-top: 36px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn-pc {
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Inter', 'PingFang SC', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      min-height: 52px;
+      padding: 14px 20px;
+      color: #ffffff;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-pc-sort {
+      min-height: 40px;
+      padding: 8px 14px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #94a3b8;
+      border-radius: 10px;
+    }
+    .btn-pc-play {
+      background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+      box-shadow: 0 2px 12px rgba(52,211,153,0.3);
+    }
+    .btn-pc-discard {
+      background: linear-gradient(180deg, #fb7185 0%, #dc2626 100%);
+      box-shadow: 0 2px 12px rgba(251,113,133,0.3);
+    }
+    .btn-pc-ai {
+      background: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%);
+      box-shadow: 0 2px 12px rgba(192,132,252,0.3);
+    }
+    .btn-pc-count {
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      padding: 2px 7px;
+      font-size: 13px;
+    }
+
+    /* ===============================================
+       关键决策区
+    =============================================== */
+    .decisions-section {
+      margin-top: 20px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(99,102,241,0.2);
+    }
+    .decisions-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      color: #fbbf24;
+      margin-bottom: 6px;
+      text-shadow: 0 0 12px rgba(251,191,36,0.3);
+    }
+    .decisions-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 28px;
+    }
+    .decisions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .decision-card {
+      background: linear-gradient(135deg, rgba(14,27,61,0.8), rgba(10,20,56,0.8));
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .decision-num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 24px;
+      color: rgba(251,191,36,0.3);
+      margin-bottom: 12px;
+    }
+    .decision-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fbbf24;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .decision-body {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.7;
+    }
+    .decision-code {
+      display: inline-block;
+      background: rgba(99,102,241,0.15);
+      color: #818cf8;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      margin: 2px 0;
+    }
+    .decision-highlight {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    /* ===============================================
+       Misc helpers
+    =============================================== */
+    .scale-badge {
+      display: inline-block;
+      font-size: 10px;
+      color: #64748b;
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 10px;
+      padding: 3px 10px;
+      margin-bottom: 12px;
+    }
+    .annotation {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: #64748b;
+      background: rgba(99,102,241,0.08);
+      border: 1px dashed rgba(99,102,241,0.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'Courier New', monospace;
+    }
+    .anno-amber { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); }
+    .anno-green { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.05); }
+    .annotations-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== 页面大标题 ===== -->
+<header class="page-header">
+  <h1>小丑牌 Tauri 跨端适配<br>UI 布局设计效果图</h1>
+  <p>版本 1.0 &nbsp;|&nbsp; 2026-05-31 &nbsp;|&nbsp; 4 个场景完整视觉展示</p>
+</header>
+
+<!-- =============================================
+     SCENE A — 手机竖屏遮罩
+============================================= -->
+<section class="scene">
+  <div class="scene-title">Scene A — 手机竖屏「请横屏游玩」遮罩</div>
+  <div class="scene-desc">
+    触发条件：@media (max-width: 768px) and (orientation: portrait)&nbsp;&nbsp;|&nbsp;&nbsp;
+    position: fixed; inset: 0; z-index: 9999&nbsp;&nbsp;|&nbsp;&nbsp;
+    图标：rotateHint keyframes 0→90° loop 1.5s
+  </div>
+
+  <div class="device-frame scene-a-phone">
+    <div class="rotate-prompt">
+      <div class="rotate-icon-wrap">
+        <span class="rotate-icon">⟳</span>
+      </div>
+      <div class="rotate-text">请横屏游玩</div>
+      <div class="rotate-sub">Please rotate your device</div>
+    </div>
+  </div>
+
+  <div class="annotations-row">
+    <span class="annotation anno-amber">设备框：320 × 568px（竖屏）</span>
+    <span class="annotation anno-amber">图标：64px amber #fbbf24，CSS spin animation 1.5s</span>
+    <span class="annotation">背景：linear-gradient(135deg, #0a1438, #1a2858)</span>
+    <span class="annotation">文字：20px 700 #e2e8f0 letter-spacing:4px</span>
+  </div>
+</section>
+
+<!-- =============================================
+     SCENE B — 手机横屏核心场景
+============================================= -->
+<section class="scene">
+  <div class="scene-title">Scene B — 手机横屏核心游戏布局（iPhone SE 667×375）</div>
+  <div class="scene-desc">
+    SideBar: 160px&nbsp;&nbsp;|&nbsp;&nbsp;
+    play-layout rows: 130px 1fr 175px&nbsp;&nbsp;|&nbsp;&nbsp;
+    手牌: 60×88px&nbsp;&nbsp;|&nbsp;&nbsp;
+    出牌区: 54×78px&nbsp;&nbsp;|&nbsp;&nbsp;
+    按钮: min-height:36px, flex-wrap:nowrap
+  </div>
+
+  <div class="device-frame scene-b-phone">
+    <div class="game-layout game-bg">
+
+      <!-- SideBar 160px -->
+      <div class="sidebar">
+        <div class="sb-logo">BALATRO</div>
+
+        <!-- 盲注 -->
+        <div class="sb-panel">
+          <div class="sb-label">盲注</div>
+          <div class="sb-value-amber" style="font-size:9px;margin-bottom:1px;">小盲 · 第1关</div>
+          <div class="sb-label" style="margin-top:2px;">目标</div>
+          <div class="sb-value-amber">300</div>
+        </div>
+
+        <!-- 当前分数 -->
+        <div class="sb-panel">
+          <div class="sb-label">当前得分</div>
+          <div class="sb-value-blue">1,248</div>
+        </div>
+
+        <!-- 筹码×倍率 -->
+        <div class="sb-panel">
+          <div class="sb-label">筹码 × 倍率</div>
+          <div class="sb-chips-mult">
+            <span class="chips-val">48</span>
+            <span class="mult-sep">×</span>
+            <span class="mult-val">2</span>
+          </div>
+        </div>
+
+        <!-- 手数/弃牌 -->
+        <div class="sb-resources">
+          <div class="sb-res-item">
+            <span class="sb-res-label">手数</span>
+            <span class="sb-res-val">4</span>
+          </div>
+          <div class="sb-res-item">
+            <span class="sb-res-label">弃牌</span>
+            <span class="sb-res-val red">3</span>
+          </div>
+        </div>
+
+        <!-- 金币 -->
+        <div class="sb-panel">
+          <div class="sb-label">金币</div>
+          <div class="sb-coins">
+            <span class="coins-sign">$</span>
+            <span class="coins-val">8</span>
+          </div>
+        </div>
+
+        <!-- 计时 -->
+        <div class="sb-panel">
+          <div class="sb-label">计时</div>
+          <div class="sb-value-white" style="font-size:14px;">0:42</div>
+        </div>
+
+        <!-- Ante -->
+        <div class="sb-ante">Ante 1 / 8</div>
+
+        <!-- 重启 -->
+        <div class="sb-restart-btn">重启</div>
+      </div>
+
+      <!-- 主区域 grid 3行 -->
+      <div class="main-area game-bg">
+
+        <!-- Row 1: Joker 区 130px -->
+        <div class="joker-area">
+          <div class="joker-header">
+            <span class="joker-title">JOKERS</span>
+            <span class="joker-badge">2 / 5</span>
+          </div>
+          <div class="settings-btn">⚙</div>
+          <div class="joker-slots">
+            <!-- 已有 Joker -->
+            <div class="joker-slot filled">
+              <div style="font-size:16px;color:#1a2858;">🃏</div>
+              <div>贪婪<br>小丑</div>
+            </div>
+            <!-- 已有 Joker -->
+            <div class="joker-slot filled">
+              <div style="font-size:16px;color:#1a2858;">🎭</div>
+              <div>奇数<br>小丑</div>
+            </div>
+            <!-- 空槽 ×3 -->
+            <div class="joker-slot">
+              +
+              <span class="joker-slot-label">空槽</span>
+            </div>
+            <div class="joker-slot">
+              +
+              <span class="joker-slot-label">空槽</span>
+            </div>
+            <div class="joker-slot">
+              +
+              <span class="joker-slot-label">空槽</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: 出牌区 1fr≈70px -->
+        <div class="play-area">
+          <div class="played-cards-row">
+            <!-- 已出的牌 ×3 -->
+            <div class="played-card black-card">
+              <div class="card-top-left"><div class="card-rank">A</div><div class="card-suit-small">♠</div></div>
+              <div class="card-center">♠</div>
+              <div class="card-bottom-right"><div class="card-rank">A</div><div class="card-suit-small">♠</div></div>
+            </div>
+            <div class="played-card red-card">
+              <div class="card-top-left"><div class="card-rank">K</div><div class="card-suit-small">♥</div></div>
+              <div class="card-center">♥</div>
+              <div class="card-bottom-right"><div class="card-rank">K</div><div class="card-suit-small">♥</div></div>
+            </div>
+            <div class="played-card red-card">
+              <div class="card-top-left"><div class="card-rank">Q</div><div class="card-suit-small">♦</div></div>
+              <div class="card-center">♦</div>
+              <div class="card-bottom-right"><div class="card-rank">Q</div><div class="card-suit-small">♦</div></div>
+            </div>
+          </div>
+
+          <!-- 牌堆：相对 play-area 绝对定位 bottom:4 right:8 -->
+          <div class="deck-pile">
+            <div class="deck-card-back"></div>
+            <div class="deck-card-back"></div>
+            <div class="deck-card-back"></div>
+            <div class="deck-count">32</div>
+          </div>
+        </div>
+
+        <!-- Row 3: 手牌区 175px -->
+        <div class="hand-area">
+          <!-- 手牌行：60×88px，第2、4张选中 -->
+          <div class="hand-cards-row">
+            <div class="hand-card black-card">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">J</div><div class="card-suit-small">♠</div></div>
+              <div class="card-center">♠</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">J</div><div class="card-suit-small">♠</div></div>
+            </div>
+            <div class="hand-card red-card selected">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">10</div><div class="card-suit-small">♥</div></div>
+              <div class="card-center" style="font-size:18px;">♥</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">10</div><div class="card-suit-small">♥</div></div>
+            </div>
+            <div class="hand-card black-card">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">9</div><div class="card-suit-small">♣</div></div>
+              <div class="card-center">♣</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">9</div><div class="card-suit-small">♣</div></div>
+            </div>
+            <div class="hand-card red-card selected">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">8</div><div class="card-suit-small">♦</div></div>
+              <div class="card-center" style="font-size:18px;">♦</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">8</div><div class="card-suit-small">♦</div></div>
+            </div>
+            <div class="hand-card black-card">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">7</div><div class="card-suit-small">♠</div></div>
+              <div class="card-center">♠</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">7</div><div class="card-suit-small">♠</div></div>
+            </div>
+            <div class="hand-card red-card">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">6</div><div class="card-suit-small">♥</div></div>
+              <div class="card-center" style="font-size:18px;">♥</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">6</div><div class="card-suit-small">♥</div></div>
+            </div>
+            <div class="hand-card black-card">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">5</div><div class="card-suit-small">♣</div></div>
+              <div class="card-center">♣</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">5</div><div class="card-suit-small">♣</div></div>
+            </div>
+            <div class="hand-card red-card">
+              <div class="card-top-left"><div class="card-rank" style="font-size:10px;">3</div><div class="card-suit-small">♦</div></div>
+              <div class="card-center" style="font-size:18px;">♦</div>
+              <div class="card-bottom-right"><div class="card-rank" style="font-size:10px;">3</div><div class="card-suit-small">♦</div></div>
+            </div>
+          </div>
+
+          <!-- 操作按钮行：flex-wrap:nowrap, gap:6px, padding-top:10px -->
+          <div class="action-buttons-row">
+            <div class="sort-group">
+              <button class="btn btn-sort">按点数</button>
+              <button class="btn btn-sort">按花色</button>
+            </div>
+            <button class="btn btn-play">出牌 <span class="btn-count">3</span></button>
+            <button class="btn btn-discard">弃牌 <span class="btn-count">2</span></button>
+            <button class="btn btn-ai">🤖 AI出牌</button>
+          </div>
+        </div>
+
+      </div><!-- /main-area -->
+    </div><!-- /game-layout -->
+  </div><!-- /device-frame -->
+
+  <div class="annotations-row">
+    <span class="annotation anno-amber">设备框：667 × 375px（iPhone SE 横屏）</span>
+    <span class="annotation anno-amber">SideBar: width:160px（min-width:160px）</span>
+    <span class="annotation anno-amber">grid rows: 130px 1fr 175px</span>
+    <span class="annotation">手牌: 60×88px，选中 translateY(-16px)</span>
+    <span class="annotation">出牌区: 54×78px，牌堆 bottom:8 right:8</span>
+    <span class="annotation anno-green">按钮: min-height:36px, flex-wrap:nowrap</span>
+  </div>
+</section>
+
+<!-- =============================================
+     SCENE C — 竖屏→横屏过渡动效时序图
+============================================= -->
+<section class="scene">
+  <div class="scene-title">Scene C — 竖屏 → 横屏过渡动效时序</div>
+  <div class="scene-desc">
+    3 个阶段状态：遮罩显示中 → 旋转检测中 → 游戏布局出现（总耗时约 300ms）
+  </div>
+
+  <div class="transition-timeline">
+
+    <!-- Phase 1: 竖屏遮罩 -->
+    <div class="timeline-step">
+      <div class="timeline-label">t = 0ms</div>
+      <div class="frame-portrait">
+        <div class="rotate-icon-wrap" style="width:70px;height:70px;">
+          <span style="font-size:40px;color:#fbbf24;animation:rotateHint 1.5s ease-in-out infinite;display:block;">⟳</span>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#e2e8f0;letter-spacing:2px;">请横屏游玩</div>
+        <div style="font-size:9px;color:#64748b;">设备处于竖屏</div>
+      </div>
+      <div class="timeline-sub">竖屏遮罩<br>display:flex<br>z-index: 9999<br>旋转图标动画中</div>
+    </div>
+
+    <!-- 箭头 1 -->
+    <div class="timeline-arrow">
+      <div class="arrow-time">旋转事件</div>
+      <div style="display:flex;align-items:center;">
+        <div class="arrow-line"></div>
+        <div style="color:#fbbf24;font-size:14px;margin-left:-2px;">▶</div>
+      </div>
+      <div style="font-size:9px;color:#64748b;text-align:center;">orientation<br>→ landscape</div>
+    </div>
+
+    <!-- Phase 2: 过渡中 -->
+    <div class="timeline-step">
+      <div class="timeline-label">t = 0–25ms</div>
+      <div class="frame-portrait fading" style="width:195px;height:130px;border-radius:12px;flex-direction:row;gap:0;padding:0;overflow:hidden;">
+        <!-- 变成横屏过渡 -->
+        <div style="width:60px;height:100%;background:rgba(14,27,61,0.8);border-right:1px solid rgba(30,58,95,0.5);display:flex;align-items:center;justify-content:center;">
+          <div style="font-size:9px;color:#64748b;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px;">SIDEBAR</div>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+          <div class="frame-transition-ring" style="width:40px;height:40px;border-width:2px;"></div>
+          <div style="font-size:9px;color:#64748b;">过渡中...</div>
+        </div>
+      </div>
+      <div class="timeline-sub">媒体查询触发<br>遮罩 opacity→0<br>scale(0.95)<br>rotate-fade 淡出</div>
+    </div>
+
+    <!-- 箭头 2 -->
+    <div class="timeline-arrow">
+      <div class="arrow-time">250ms 后</div>
+      <div style="display:flex;align-items:center;">
+        <div class="arrow-line" style="background:linear-gradient(90deg, rgba(99,102,241,0.4), rgba(52,211,153,0.6));"></div>
+        <div style="color:#34d399;font-size:14px;margin-left:-2px;">▶</div>
+      </div>
+      <div style="font-size:9px;color:#64748b;text-align:center;">布局稳定<br>可操作</div>
+    </div>
+
+    <!-- Phase 3: 游戏可见 -->
+    <div class="timeline-step">
+      <div class="timeline-label">t = 300ms</div>
+      <div class="frame-landscape">
+        <div class="frame-game-mini">
+          <div class="frame-sidebar-mini">
+            <div class="mini-sb-block"></div>
+            <div class="mini-sb-block tall"></div>
+            <div class="mini-sb-block"></div>
+            <div class="mini-sb-block"></div>
+            <div class="mini-sb-block"></div>
+          </div>
+          <div class="frame-main-mini">
+            <div class="mini-joker-row">
+              <div class="mini-joker-slot"></div>
+              <div class="mini-joker-slot" style="border:1px dashed rgba(99,102,241,0.4);background:rgba(99,102,241,0.07);"></div>
+              <div class="mini-joker-slot" style="border:1px dashed rgba(99,102,241,0.4);background:rgba(99,102,241,0.07);"></div>
+              <div class="mini-joker-slot" style="border:1px dashed rgba(99,102,241,0.4);background:rgba(99,102,241,0.07);"></div>
+              <div class="mini-joker-slot" style="border:1px dashed rgba(99,102,241,0.4);background:rgba(99,102,241,0.07);"></div>
+            </div>
+            <div class="mini-play-row">
+              <div class="mini-played-card"></div>
+              <div class="mini-played-card"></div>
+              <div class="mini-played-card"></div>
+            </div>
+            <div class="mini-hand-row">
+              <div class="mini-hand-card"></div>
+              <div class="mini-hand-card sel"></div>
+              <div class="mini-hand-card"></div>
+              <div class="mini-hand-card sel"></div>
+              <div class="mini-hand-card"></div>
+              <div class="mini-hand-card"></div>
+              <div class="mini-hand-card"></div>
+              <div class="mini-hand-card"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-sub">遮罩完全消失<br>游戏布局完整呈现<br>SideBar transition<br>0.3s width 完成</div>
+    </div>
+
+  </div><!-- /transition-timeline -->
+
+  <div class="annotations-row">
+    <span class="annotation anno-amber">遮罩淡出：opacity 0.25s + scale(0.95) — Vue &lt;Transition name="rotate-fade"&gt;</span>
+    <span class="annotation">SideBar width transition: 0.3s ease（已有）</span>
+    <span class="annotation anno-green">布局稳定时间：t=300ms，game 可操作</span>
+  </div>
+</section>
+
+<!-- =============================================
+     SCENE D — PC 桌面版对比
+============================================= -->
+<section class="scene">
+  <div class="scene-title">Scene D — PC 桌面版布局（1000×600，scale 0.8×）</div>
+  <div class="scene-desc">
+    SideBar: min-width:280px&nbsp;&nbsp;|&nbsp;&nbsp;
+    play-layout rows: 230px 1fr 280px&nbsp;&nbsp;|&nbsp;&nbsp;
+    手牌: 100×145px&nbsp;&nbsp;|&nbsp;&nbsp;
+    出牌区: 90×130px&nbsp;&nbsp;|&nbsp;&nbsp;
+    媒体查询不触发，所有值为 PC 默认值
+  </div>
+
+  <span class="scale-badge">↕ 实际 scale(0.8) 缩放展示，原始尺寸 1000×600px</span>
+
+  <div class="scene-d-container">
+    <div class="scene-d-wrap">
+      <div class="device-frame scene-d-pc">
+        <div class="game-layout game-bg">
+
+          <!-- PC SideBar 280px -->
+          <div class="sidebar-pc">
+            <div class="sb-pc-logo">BALATRO</div>
+
+            <!-- 盲注面板 -->
+            <div class="sb-pc-panel">
+              <div class="sb-pc-label">盲注</div>
+              <div class="sb-pc-val-amber" style="font-size:13px;margin-bottom:3px;">小盲 · 第1关</div>
+              <div class="sb-pc-label" style="margin-top:4px;">目标得分</div>
+              <div class="sb-pc-val-amber">300</div>
+            </div>
+
+            <!-- 当前得分 -->
+            <div class="sb-pc-panel">
+              <div class="sb-pc-label">当前分数</div>
+              <div class="sb-pc-val-blue">1,248</div>
+            </div>
+
+            <!-- 筹码×倍率 -->
+            <div class="sb-pc-panel">
+              <div class="sb-pc-label">筹码 × 倍率</div>
+              <div class="sb-pc-chips-mult">
+                <span class="pc-chips-val">48</span>
+                <span class="pc-mult-sep">×</span>
+                <span class="pc-mult-val">2</span>
+              </div>
+            </div>
+
+            <!-- 手数/弃牌 -->
+            <div class="sb-pc-resources">
+              <div class="sb-pc-res-item">
+                <span class="sb-pc-res-label">剩余手数</span>
+                <span class="sb-pc-res-val">4</span>
+              </div>
+              <div class="sb-pc-res-item">
+                <span class="sb-pc-res-label">弃牌数</span>
+                <span class="sb-pc-res-val red">3</span>
+              </div>
+            </div>
+
+            <!-- 金币 -->
+            <div class="sb-pc-panel">
+              <div class="sb-pc-label">金币</div>
+              <div class="sb-pc-coins">
+                <span class="pc-coins-sign">$</span>
+                <span class="pc-coins-val">8</span>
+              </div>
+            </div>
+
+            <!-- 计时 -->
+            <div class="sb-pc-panel">
+              <div class="sb-pc-label">计时器</div>
+              <div style="font-family:'Press Start 2P',monospace;font-size:22px;color:#e2e8f0;">0:42</div>
+            </div>
+
+            <!-- Ante -->
+            <div class="sb-pc-ante">Ante 1 / 8</div>
+
+            <!-- 重启 -->
+            <div class="sb-pc-restart">重新开始</div>
+          </div>
+
+          <!-- PC 主区域 -->
+          <div class="main-area-pc game-bg">
+
+            <!-- Row 1: Joker 区 230px -->
+            <div class="joker-area-pc">
+              <div class="joker-header-pc">
+                <span class="joker-title-pc">JOKERS</span>
+                <span class="joker-badge-pc">2 / 5</span>
+              </div>
+              <div class="settings-btn-pc">⚙</div>
+              <div class="joker-slots-pc">
+                <div class="joker-slot-pc filled">
+                  <div style="font-size:28px;color:#1a2858;">🃏</div>
+                  <div style="margin-top:4px;">贪婪小丑</div>
+                </div>
+                <div class="joker-slot-pc filled">
+                  <div style="font-size:28px;color:#1a2858;">🎭</div>
+                  <div style="margin-top:4px;">奇数小丑</div>
+                </div>
+                <div class="joker-slot-pc">
+                  +
+                  <span class="joker-slot-label-pc">空槽</span>
+                </div>
+                <div class="joker-slot-pc">
+                  +
+                  <span class="joker-slot-label-pc">空槽</span>
+                </div>
+                <div class="joker-slot-pc">
+                  +
+                  <span class="joker-slot-label-pc">空槽</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: 出牌区 1fr -->
+            <div class="play-area-pc">
+              <div class="played-cards-row-pc">
+                <div class="played-card-pc black-card">
+                  <div class="card-top-left"><div class="pc-card-rank">A</div><div class="pc-card-suit-s">♠</div></div>
+                  <div class="pc-card-center">♠</div>
+                  <div class="card-bottom-right pc-card-corner"><div class="pc-card-rank">A</div><div class="pc-card-suit-s">♠</div></div>
+                </div>
+                <div class="played-card-pc red-card">
+                  <div class="card-top-left"><div class="pc-card-rank">K</div><div class="pc-card-suit-s">♥</div></div>
+                  <div class="pc-card-center">♥</div>
+                  <div class="card-bottom-right pc-card-corner"><div class="pc-card-rank">K</div><div class="pc-card-suit-s">♥</div></div>
+                </div>
+                <div class="played-card-pc red-card">
+                  <div class="card-top-left"><div class="pc-card-rank">Q</div><div class="pc-card-suit-s">♦</div></div>
+                  <div class="pc-card-center">♦</div>
+                  <div class="card-bottom-right pc-card-corner"><div class="pc-card-rank">Q</div><div class="pc-card-suit-s">♦</div></div>
+                </div>
+                <div class="played-card-pc black-card">
+                  <div class="card-top-left"><div class="pc-card-rank">J</div><div class="pc-card-suit-s">♣</div></div>
+                  <div class="pc-card-center">♣</div>
+                  <div class="card-bottom-right pc-card-corner"><div class="pc-card-rank">J</div><div class="pc-card-suit-s">♣</div></div>
+                </div>
+                <div class="played-card-pc red-card">
+                  <div class="card-top-left"><div class="pc-card-rank">10</div><div class="pc-card-suit-s">♥</div></div>
+                  <div class="pc-card-center">♥</div>
+                  <div class="card-bottom-right pc-card-corner"><div class="pc-card-rank">10</div><div class="pc-card-suit-s">♥</div></div>
+                </div>
+              </div>
+
+              <!-- PC 牌堆 bottom:16 right:16 -->
+              <div class="deck-pile-pc">
+                <div class="deck-card-back-pc"></div>
+                <div class="deck-card-back-pc"></div>
+                <div class="deck-card-back-pc"></div>
+                <div class="deck-count-pc">32</div>
+              </div>
+            </div>
+
+            <!-- Row 3: 手牌区 280px -->
+            <div class="hand-area-pc">
+              <div class="hand-cards-row-pc">
+                <div class="hand-card-pc black-card">
+                  <div class="card-top-left"><div class="pc-hcard-rank">J</div><div class="pc-hcard-suit">♠</div></div>
+                  <div class="pc-hcard-center">♠</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">J</div><div class="pc-hcard-suit">♠</div></div>
+                </div>
+                <div class="hand-card-pc red-card selected">
+                  <div class="card-top-left"><div class="pc-hcard-rank">10</div><div class="pc-hcard-suit">♥</div></div>
+                  <div class="pc-hcard-center">♥</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">10</div><div class="pc-hcard-suit">♥</div></div>
+                </div>
+                <div class="hand-card-pc black-card">
+                  <div class="card-top-left"><div class="pc-hcard-rank">9</div><div class="pc-hcard-suit">♣</div></div>
+                  <div class="pc-hcard-center">♣</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">9</div><div class="pc-hcard-suit">♣</div></div>
+                </div>
+                <div class="hand-card-pc red-card selected">
+                  <div class="card-top-left"><div class="pc-hcard-rank">8</div><div class="pc-hcard-suit">♦</div></div>
+                  <div class="pc-hcard-center">♦</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">8</div><div class="pc-hcard-suit">♦</div></div>
+                </div>
+                <div class="hand-card-pc black-card">
+                  <div class="card-top-left"><div class="pc-hcard-rank">7</div><div class="pc-hcard-suit">♠</div></div>
+                  <div class="pc-hcard-center">♠</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">7</div><div class="pc-hcard-suit">♠</div></div>
+                </div>
+                <div class="hand-card-pc red-card">
+                  <div class="card-top-left"><div class="pc-hcard-rank">6</div><div class="pc-hcard-suit">♥</div></div>
+                  <div class="pc-hcard-center">♥</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">6</div><div class="pc-hcard-suit">♥</div></div>
+                </div>
+                <div class="hand-card-pc black-card">
+                  <div class="card-top-left"><div class="pc-hcard-rank">5</div><div class="pc-hcard-suit">♣</div></div>
+                  <div class="pc-hcard-center">♣</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">5</div><div class="pc-hcard-suit">♣</div></div>
+                </div>
+                <div class="hand-card-pc red-card">
+                  <div class="card-top-left"><div class="pc-hcard-rank">3</div><div class="pc-hcard-suit">♦</div></div>
+                  <div class="pc-hcard-center">♦</div>
+                  <div class="card-bottom-right" style="transform:rotate(180deg);"><div class="pc-hcard-rank">3</div><div class="pc-hcard-suit">♦</div></div>
+                </div>
+              </div>
+
+              <!-- PC 按钮行 min-height:52px, flex-wrap:wrap -->
+              <div class="action-buttons-row-pc">
+                <div class="sort-group" style="gap:6px;">
+                  <button class="btn-pc btn-pc-sort">按点数</button>
+                  <button class="btn-pc btn-pc-sort">按花色</button>
+                </div>
+                <button class="btn-pc btn-pc-play">出牌 <span class="btn-pc-count">3</span></button>
+                <button class="btn-pc btn-pc-discard">弃牌 <span class="btn-pc-count">2</span></button>
+                <button class="btn-pc btn-pc-ai">🤖 AI出牌</button>
+              </div>
+            </div>
+
+          </div><!-- /main-area-pc -->
+        </div><!-- /game-layout -->
+      </div><!-- /device-frame -->
+    </div><!-- /scene-d-wrap -->
+  </div><!-- /scene-d-container -->
+
+  <div class="annotations-row">
+    <span class="annotation anno-amber">原始尺寸 1000×600px，展示时 scale(0.8)</span>
+    <span class="annotation anno-amber">SideBar: min-width:280px, width:min(28vw,480px)</span>
+    <span class="annotation anno-amber">grid rows: 230px 1fr 280px</span>
+    <span class="annotation">手牌: 100×145px，选中 translateY(-28px)</span>
+    <span class="annotation">出牌区: 90×130px，牌堆 bottom:16 right:16</span>
+    <span class="annotation anno-green">按钮: min-height:52px, padding:14px 20px, flex-wrap:wrap</span>
+  </div>
+</section>
+
+<!-- =============================================
+     关键决策说明
+============================================= -->
+<section class="decisions-section">
+  <div class="decisions-title">关键布局决策</div>
+  <div class="decisions-subtitle">来自 DESIGN.md §7 — 最关键的 3 个布局决策，直接决定移动端可玩性</div>
+
+  <div class="decisions-grid">
+
+    <!-- 决策 1 -->
+    <div class="decision-card">
+      <div class="decision-num">01</div>
+      <div class="decision-title">SideBar 宽度从 280px 压缩至 160px</div>
+      <div class="decision-body">
+        释放 <span class="decision-highlight">120px</span> 给主游戏区（出牌+手牌），是移动端可玩性的根本保证。
+        <br><br>
+        PC：<span class="decision-code">min-width: 280px</span><br>
+        移动：<span class="decision-code">min-width: 160px</span><br><br>
+        160px 是 SideBar 信息在 8px 字号下仍可辨识的最小宽度。
+        所有 SideBar 内字号同比例从 10–44px 缩小至 7–30px，保留完整信息层级。
+      </div>
+    </div>
+
+    <!-- 决策 2 -->
+    <div class="decision-card">
+      <div class="decision-num">02</div>
+      <div class="decision-title">play-layout rows 重新预算：130px / 1fr / 175px</div>
+      <div class="decision-body">
+        PC：<span class="decision-code">230px 1fr 280px</span><br>
+        移动：<span class="decision-code">130px 1fr 175px</span><br><br>
+        Joker 区节省 <span class="decision-highlight">100px</span>（卡片 0.6× 缩小后不需要那么高）。
+        HandArea 节省 <span class="decision-highlight">105px</span>（卡牌 88px + 按钮 36px + padding 51px = 175px 刚好够用）。
+        <br><br>
+        两处共节省 205px，是 360px 高度下无滚动显示全部内容的关键。
+      </div>
+    </div>
+
+    <!-- 决策 3 -->
+    <div class="decision-card">
+      <div class="decision-num">03</div>
+      <div class="decision-title">按钮 flex-wrap:nowrap + min-height:36px 双约束</div>
+      <div class="decision-body">
+        PC：<span class="decision-code">flex-wrap: wrap</span>，<span class="decision-code">min-height: 52px</span><br>
+        移动：<span class="decision-code">flex-wrap: nowrap</span>，<span class="decision-code">min-height: 36px</span><br><br>
+        强制按钮单行排列避免换行遮挡手牌。4 按钮组合计宽约 <span class="decision-highlight">382px &lt; 507px</span>，
+        有 125px 余量，绝对不换行。
+        <br><br>
+        同时保证触摸点击区域 ≥ 36px 满足移动端交互标准。
+        通过缩小字号（15px→11px）和 padding（14px 20px → 6px 10px）而非压缩 min-height 来化解矛盾。
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 页脚 ===== -->
+<footer style="text-align:center;padding:48px 0 24px;color:#334155;font-size:11px;">
+  小丑牌 Tauri 跨端适配 — UI 布局设计效果图 v1.0 &nbsp;|&nbsp; 2026-05-31
+  &nbsp;|&nbsp; 纯 HTML + CSS，无 JS 框架依赖
+</footer>
+
+</body>
+</html>

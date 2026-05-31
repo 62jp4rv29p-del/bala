@@ -123,4 +123,27 @@ export default {
 .playing-card.red-suit .card-suit {
   color: #dc2626;
 }
+
+/* ── 移动端横屏适配 ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .playing-card {
+    width: 60px;
+    height: 88px;
+    border-radius: 6px;
+  }
+
+  .playing-card.selected {
+    transform: translateY(-16px);
+  }
+
+  .playing-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .card-rank { font-size: 11px; }
+  .card-suit { font-size: 8px; }
+  .card-center-suit { font-size: 22px; }
+  .card-inner { padding: 4px; }
+  .card-corner.bottom-right { bottom: 4px; right: 4px; }
+}
 </style>

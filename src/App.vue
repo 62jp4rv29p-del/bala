@@ -1,5 +1,11 @@
 <template>
   <div class="app-root">
+    <!-- Portrait rotation prompt (mobile only) -->
+    <div class="rotate-prompt">
+      <div class="rotate-icon">⟳</div>
+      <div class="rotate-text">请横屏游玩</div>
+    </div>
+
     <!-- Intro / Start Screen -->
     <Transition name="intro-fade">
       <div v-if="gameState.phase === 'intro'" class="intro-overlay">
@@ -847,6 +853,39 @@ body::before {
   0% { opacity: 0.6; transform: scale(1); }
   100% { opacity: 1; transform: scale(1.02); }
 }
+
+/* ── 竖屏旋转提示（仅移动端竖屏显示）── */
+.rotate-prompt {
+  display: none;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .rotate-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #0a1438 0%, #1a2858 50%, #0a1438 100%);
+    gap: 20px;
+  }
+  .rotate-icon {
+    font-size: 64px;
+    animation: rotateHint 1.5s ease-in-out infinite;
+  }
+  .rotate-text {
+    font-family: 'Inter', 'PingFang SC', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+  @keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
+  }
+}
 </style>
 
 <style scoped>
@@ -1036,5 +1075,50 @@ body::before {
   font-family: 'Press Start 2P', monospace;
   font-size: 24px;
   color: #fbbf24;
+}
+
+/* ── 移动端横屏适配（主布局）── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .play-layout {
+    grid-template-rows: 130px 1fr 175px;
+  }
+
+  .joker-area {
+    padding: 6px 8px 4px;
+  }
+
+  .joker-area-header {
+    margin-bottom: 5px;
+  }
+
+  .joker-area-title {
+    font-size: 10px;
+  }
+
+  .joker-count-badge {
+    font-size: 9px;
+  }
+
+  .joker-slots-row {
+    gap: 7px;
+  }
+
+  .settings-btn {
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .big-score-box {
+    padding: 12px 20px;
+  }
+
+  .bsb-hand-name { font-size: 13px; margin-bottom: 8px; }
+  .bsb-chips     { font-size: 14px; }
+  .bsb-x, .bsb-eq { font-size: 11px; }
+  .bsb-mult      { font-size: 14px; }
+  .bsb-score     { font-size: 17px; }
 }
 </style>

@@ -518,4 +518,60 @@ export default {
 .restart-btn:active {
   transform: translateY(0);
 }
+
+/* ── 移动端横屏适配（宽 ≤ 900px 且横屏，即手机横屏）── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar {
+    width: min(22vw, 200px);
+    min-width: 160px;
+    padding: 8px 8px;
+    gap: 5px;
+  }
+
+  .logo {
+    font-size: 11px;
+    padding: 2px 0;
+  }
+
+  .blind-panel {
+    padding: 6px 8px;
+  }
+
+  .blind-icon { font-size: 13px; }
+  .blind-badge { font-size: 9px; }
+  .blind-name { font-size: 11px; }
+  .blind-target-value { font-size: 20px; }
+  .blind-reward { font-size: 8px; }
+
+  .score-panel { padding: 6px 8px; }
+  .score-label { font-size: 9px; }
+  .score-value { font-size: 30px; }
+
+  .hand-score-panel { padding: 5px 8px; }
+  .hand-type-name { font-size: 10px; margin-bottom: 3px; }
+  .chips-value, .mult-value { font-size: 10px; }
+  .chips-label, .mult-label { font-size: 7px; }
+  .mult-sep { font-size: 10px; }
+
+  .resources-row { gap: 5px; }
+  .resource-panel { padding: 5px; }
+  .resource-label { font-size: 8px; }
+  .resource-value { font-size: 24px; }
+
+  .coins-panel { padding: 5px 8px; }
+  .coins-sign { font-size: 14px; }
+  .coins-value { font-size: 30px; }
+
+  .timer-panel { padding: 5px 8px; }
+  .timer-label { font-size: 8px; }
+  .timer-value { font-size: 22px; }
+
+  .ante-info { font-size: 8px; }
+
+  .px-btn.restart-btn {
+    min-height: 36px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
 </style>
